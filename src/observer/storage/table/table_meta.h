@@ -39,7 +39,7 @@ public:
   RC init(int32_t table_id, const char *name, int field_num, const AttrInfoSqlNode attributes[]);
 
   RC add_index(const IndexMeta &index);
-
+  RC remove_index(const char *index_name);
 public:
   int32_t                       table_id() const { return table_id_; }
   const char                   *name() const;

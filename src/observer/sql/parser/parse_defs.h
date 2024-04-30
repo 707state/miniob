@@ -92,7 +92,6 @@ struct SelectSqlNode
   std::vector<std::string>      relations;   ///< 查询的表
   std::vector<ConditionSqlNode> conditions;  ///< 查询条件，使用AND串联起来多个条件
 };
-
 /**
  * @brief 算术表达式计算的语法树
  * @ingroup SQLParser
@@ -114,7 +113,6 @@ struct InsertSqlNode
   std::string        relation_name;  ///< Relation to insert into
   std::vector<Value> values;         ///< 要插入的值
 };
-
 /**
  * @brief 描述一个delete语句
  * @ingroup SQLParser
@@ -225,6 +223,37 @@ struct SetVariableSqlNode
   std::string name;
   Value       value;
 };
+/**
+ *@brief alter_table_add_stmt修改表的语法树
+ * @ ingroup SQLParser
+ */
+struct AlterAddSqlNode
+{
+  std::string relation_name;
+  std::string index_name;
+  std::string attribute_name;
+};
+/**
+ *@brief alter_table_drop_stmt
+ * @ingroup SQLParser
+ * @details 删除一个index
+ */
+struct AlterDropSqlNode
+{
+  std::string relation_name;
+  std::string index_name;
+};
+/**
+ * @brief alter_table_modify_stmt
+ * @ingroup SQLParser
+ * @details 修改一个表的属性
+ */
+struct AlterModifySqlNode
+{
+  std::string relation_name;
+  std::string index_name;
+  std::string attribute_name;
+};
 
 class ParsedSqlNode;
 
@@ -251,8 +280,14 @@ struct ErrorSqlNode
   int         line;
   int         column;
 };
+struct ActionSqlNode
+{
+  std::string index_name;
+  std::string attribute_name;
+  int         type;
+};
 
-/**
+/*
  * @brief 表示一个SQL语句的类型
  * @ingroup SQLParser
  */
@@ -264,6 +299,10 @@ enum SqlCommandFlag
   SCF_INSERT,
   SCF_UPDATE,
   SCF_DELETE,
+  SCF_ALTER_ADD,
+  SCF_ALTER_DROP,
+  SCF_ALTER_MODIFY,
+  SCF_ACTION,
   SCF_CREATE_TABLE,
   SCF_DROP_TABLE,
   SCF_CREATE_INDEX,
@@ -295,14 +334,19 @@ public:
   InsertSqlNode       insertion;
   DeleteSqlNode       deletion;
   UpdateSqlNode       update;
-  CreateTableSqlNode  create_table;
-  DropTableSqlNode    drop_table;
-  CreateIndexSqlNode  create_index;
-  DropIndexSqlNode    drop_index;
-  DescTableSqlNode    desc_table;
-  LoadDataSqlNode     load_data;
-  ExplainSqlNode      explain;
-  SetVariableSqlNode  set_variable;
+  // add action
+  ActionSqlNode      action;
+  AlterAddSqlNode    alter_table_add;
+  AlterDropSqlNode   alter_table_drop;
+  AlterModifySqlNode alter_table_modify;
+  CreateTableSqlNode create_table;
+  DropTableSqlNode   drop_table;
+  CreateIndexSqlNode create_index;
+  DropIndexSqlNode   drop_index;
+  DescTableSqlNode   desc_table;
+  LoadDataSqlNode    load_data;
+  ExplainSqlNode     explain;
+  SetVariableSqlNode set_variable;
 
 public:
   ParsedSqlNode();
@@ -316,6 +360,8 @@ public:
 class ParsedSqlResult
 {
 public:
+  // 没有带上&引用符号，那么会传一个拷贝而不是原来的参数，应加上;
+  // 2024-4-24:19:40 : 编译不通过，先不修改
   void add_sql_node(std::unique_ptr<ParsedSqlNode> sql_node);
 
   std::vector<std::unique_ptr<ParsedSqlNode>> &sql_nodes() { return sql_nodes_; }

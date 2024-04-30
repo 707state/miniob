@@ -17,6 +17,7 @@ See the Mulan PSL v2 for more details. */
 
 #include "common/log/log.h"
 #include "storage/table/table_meta.h"
+#include "storage/index/index_meta.h"
 #include "storage/trx/trx.h"
 #include "json/json.h"
 
@@ -100,7 +101,23 @@ RC TableMeta::add_index(const IndexMeta &index)
   indexes_.push_back(index);
   return RC::SUCCESS;
 }
-
+RC TableMeta::remove_index(const char *index_name)
+{
+  int index_ = -1;
+  for (unsigned long int i = 0; i < indexes_.size(); i++) {
+    if (indexes_[i].name() == index_name) {
+      index_ = i;
+      break;
+    }
+  }
+  if (index_ == -1) {
+    return RC::SCHEMA_INDEX_NOT_EXIST;
+  }
+  for (unsigned long int i = index_ + 1; i < indexes_.size(); i++) {
+    indexes_[i - 1] = indexes_[i];
+  }
+  return RC::SUCCESS;
+}
 const char *TableMeta::name() const { return name_.c_str(); }
 
 const FieldMeta *TableMeta::trx_field() const { return &fields_[0]; }

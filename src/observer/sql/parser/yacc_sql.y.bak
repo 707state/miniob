@@ -5,7 +5,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <algorithm>
-
+#define YYDEDUG 1
 #include "common/log/log.h"
 #include "common/lang/string.h"
 #include "sql/parser/parse_defs.h"
@@ -42,7 +42,7 @@ ArithmeticExpr *create_arithmetic_expression(ArithmeticExpr::Type type,
 }
 
 %}
-
+%define parse.trace
 %define api.pure full
 %define parse.error verbose
 /** 启用位置标识 **/
@@ -56,12 +56,12 @@ ArithmeticExpr *create_arithmetic_expression(ArithmeticExpr::Type type,
 //标识tokens
 %token  SEMICOLON
         CREATE
-        MODIFY
-	ALTER
-        DROP
+        ALTER 
         TABLE
-	ADD
         TABLES
+	ADD
+        MODIFY
+        DROP
         INDEX
         CALC
         SELECT
@@ -108,7 +108,6 @@ ArithmeticExpr *create_arithmetic_expression(ArithmeticExpr::Type type,
   Value *                           value;
   enum CompOp                       comp;
   RelAttrSqlNode *                  rel_attr;
-  ActionSqlNode *                   action_sql_node;
   std::vector<AttrInfoSqlNode> *    attr_infos;
   AttrInfoSqlNode *                 attr_info;
   Expression *                      expression;
@@ -146,12 +145,9 @@ ArithmeticExpr *create_arithmetic_expression(ArithmeticExpr::Type type,
 %type <expression>          expression
 %type <expression_list>     expression_list
 %type <sql_node>            calc_stmt
-//%type <sql_node>            alter_table_add_stmt
-//%type <sql_node>            alter_table_drop_stmt
-//add two sql_nodes
-%type <sql_node>            alter_stmt
-%type <sql_node>            action
-//%type <sql_node>            alter_table_modify_stmt
+%type <sql_node>            alter_add_stmt
+%type <sql_node>            alter_drop_stmt
+%type <sql_node>            alter_modify_stmt
 %type <sql_node>            select_stmt
 %type <sql_node>            insert_stmt
 %type <sql_node>            update_stmt
@@ -193,10 +189,9 @@ command_wrapper:
   | insert_stmt
   | update_stmt
   | delete_stmt
-  // | alter_table_add_stmt
-  // | alter_table_drop_stmt
-  // | alter_table_modify_stmt
-  | alter_stmt
+  | alter_add_stmt
+  | alter_drop_stmt
+  | alter_modify_stmt
   | create_table_stmt
   | drop_table_stmt
   | show_tables_stmt
@@ -214,69 +209,6 @@ command_wrapper:
   | exit_stmt
     ;
 
-alter_stmt:
-    ALTER TABLE ID action{
-	ActionSqlNode *action_sql_node=&($4->action);
-	switch(action_sql_node->type){
-	case 1:{
-	$$=new ParsedSqlNode(SCF_ALTER_ADD);
-	AlterAddSqlNode &alter_table_add=$$->alter_table_add;
-	alter_table_add.relation_name=$3;
-	alter_table_add.index_name=action_sql_node->index_name;
-	alter_table_add.attribute_name=action_sql_node->attribute_name;
-	}break;
-	case 2:{
-	$$=new ParsedSqlNode(SCF_ALTER_DROP);
-	AlterDropSqlNode &alter_table_drop=$$->alter_table_drop;
-	alter_table_drop.relation_name=$3;
-	alter_table_drop.index_name=action_sql_node->index_name;
-	}break;
-	case 3:{
-	$$=new ParsedSqlNode(SCF_ALTER_MODIFY);
-	AlterModifySqlNode &alter_table_modify=$$->alter_table_modify;
-	alter_table_modify.relation_name=$3;
-	alter_table_modify.index_name=action_sql_node->index_name;
-	alter_table_modify.attribute_name=action_sql_node->attribute_name;
-	}break;
-	default:{
-	$$=new ParsedSqlNode(SCF_ERROR);
-	}
-   }
-   free($3);
-   delete $4;
-   // printf("Alter table ID(%s)\n",$3);
-};
-action:
-    ADD INDEX ID LBRACE ID RBRACE{
-    //printf("Add Index ID(%s), attribute name(%s)\n",$3,$5);
-    //不可行就改用全局变量
-    //或者修改$$的定义
-    $$=new ParsedSqlNode(SCF_ACTION);
-    ActionSqlNode &action=$$->action;
-    action.index_name=$3;
-    action.attribute_name=$5;
-    action.type=1;
-    free($3);
-    free($5);
-}|
-    DROP INDEX ID{
-    $$=new ParsedSqlNode(SCF_ACTION);
-    ActionSqlNode &action=$$->action;
-    action.index_name=$3;
-    action.type=2;
-    free($3);
-    //printf("Drop index ID(%s)\n",$3);
-}|
-    MODIFY INDEX ID LBRACE ID RBRACE{
-    $$=new ParsedSqlNode(SCF_ACTION);
-    ActionSqlNode &action=$$->action;
-    action.attribute_name=$5;
-    action.index_name=$3;
-    action.type=3;
-    free($3);
-    free($5);
-    //printf("Modify index ID(%s) ATTRIBUTE(%s)\n",$3,$4);
-    };
 
 exit_stmt:      
     EXIT {
@@ -359,7 +291,7 @@ drop_index_stmt:      /*drop index 语句的语法解析树*/
       free($5);
     }
     ;
-create_table_stmt:     /*create table 语句的语法解析树*/
+create_table_stmt:    /*create table 语句的语法解析树*/
     CREATE TABLE ID LBRACE attr_def attr_def_list RBRACE
     {
       $$ = new ParsedSqlNode(SCF_CREATE_TABLE);
@@ -436,6 +368,43 @@ insert_stmt:        /*insert   语句的语法解析树*/
       free($3);
     }
     ;
+
+
+
+alter_add_stmt:
+    ALTER TABLE ID ADD ID LBRACE ID RBRACE{
+    $$=new ParsedSqlNode(SCF_ALTER_ADD);
+    AlterAddSqlNode &alter_add=$$->alter_add;
+    alter_add.relation_name=$3;
+    alter_add.index_name=$5;
+    alter_add.attribute_name=$7;
+    free($3);
+    free($5);
+    free($7);
+};
+alter_drop_stmt:
+    ALTER TABLE ID DROP INDEX ID{
+    $$=new ParsedSqlNode(SCF_ALTER_DROP);
+    AlterDropSqlNode &alter_drop=$$->alter_drop;
+    alter_drop.relation_name=$3;
+    alter_drop.index_name=$6;
+    free($3);
+    free($6);
+};
+alter_modify_stmt:
+    ALTER TABLE ID MODIFY ID LBRACE ID RBRACE{
+    $$=new ParsedSqlNode(SCF_ALTER_MODIFY);
+    AlterModifySqlNode &alter_modify=$$->alter_modify;
+    alter_modify.relation_name=$3;
+    alter_modify.index_name=$5;
+    alter_modify.attribute_name=$7;
+    free($3);
+    free($5);
+    free($7);
+};
+
+
+
 
 value_list:
     /* empty */

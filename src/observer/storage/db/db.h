@@ -51,6 +51,10 @@ public:
   Table *find_table(const char *table_name) const;
   Table *find_table(int32_t table_id) const;
 
+  RC drop_table(const char* table_name);
+
+  
+  
   const char *name() const;
 
   void all_tables(std::vector<std::string> &table_names) const;

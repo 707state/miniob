@@ -14,6 +14,7 @@ See the Mulan PSL v2 for more details. */
 
 #pragma once
 
+#include "storage/field/field_meta.h"
 #include "storage/table/table_meta.h"
 #include <functional>
 
@@ -80,7 +81,7 @@ public:
 
   // TODO refactor
   RC create_index(Trx *trx, const FieldMeta *field_meta, const char *index_name);
-
+  RC drop_index(Trx *trx,const char* index_name,const FieldMeta *field_meta);
   RC get_record_scanner(RecordFileScanner &scanner, Trx *trx, bool readonly);
 
   RecordFileHandler *record_handler() const { return record_handler_; }
@@ -103,7 +104,7 @@ private:
 public:
   Index *find_index(const char *index_name) const;
   Index *find_index_by_field(const char *field_name) const;
-
+  RC destroy(const char * dir);
 private:
   std::string          base_dir_;
   TableMeta            table_meta_;

@@ -22,6 +22,7 @@ See the Mulan PSL v2 for more details. */
 #include "session/session.h"
 #include "storage/clog/clog.h"
 #include "storage/common/condition_filter.h"
+#include "storage/db/db.h"
 #include "storage/index/bplus_tree.h"
 #include "storage/record/record_manager.h"
 #include "storage/table/table.h"
@@ -152,7 +153,13 @@ RC DefaultHandler::create_table(
   return db->create_table(relation_name, attribute_count, attributes);
 }
 
-RC DefaultHandler::drop_table(const char *dbname, const char *relation_name) { return RC::UNIMPLENMENT; }
+RC DefaultHandler::drop_table(const char *dbname, const char *relation_name)
+{
+  Db *db = find_db(dbname);
+  if (db == nullptr)
+    return RC::SCHEMA_DB_NOT_EXIST;
+  return db->drop_table(relation_name);
+}
 
 Db *DefaultHandler::find_db(const char *dbname) const
 {

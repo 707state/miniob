@@ -24,13 +24,37 @@ See the Mulan PSL v2 for more details. */
 #include "sql/executor/show_tables_executor.h"
 #include "sql/executor/trx_begin_executor.h"
 #include "sql/executor/trx_end_executor.h"
+#include "sql/executor/drop_index_executor.h"
+#include "sql/executor/drop_table_executor.h"
 #include "sql/stmt/stmt.h"
-
+#include "sql/executor/alter_table_add_executor.h"
+#include "sql/executor/alter_table_drop_executor.h"
+#include "alter_table_modify_executor.h"
 RC CommandExecutor::execute(SQLStageEvent *sql_event)
 {
   Stmt *stmt = sql_event->stmt();
 
   switch (stmt->type()) {
+    case StmtType::ALTER_TABLE_ADD: {
+        AlterTableAddExecuter executor;
+        return executor.execute(sql_event);
+    }break;
+    case StmtType::ALTER_TABLE_DROP: {
+        AlterTableDropExecuter executor;
+        return executor.execute(sql_event);
+    }break;
+    case StmtType::ALTER_TABLE_MODIFY: {
+        AlterTableModifyExecutor executor;
+       return executor.execute(sql_event);
+    }break;
+    case StmtType::DROP_INDEX: {
+        DropIndexExecutor executor;
+       return executor.execute(sql_event);
+    }break;
+    case StmtType::DROP_TABLE: {
+      DropTableExecutor executor;
+      return executor.execute(sql_event);
+    }break;
     case StmtType::CREATE_INDEX: {
       CreateIndexExecutor executor;
       return executor.execute(sql_event);

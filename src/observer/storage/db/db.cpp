@@ -15,12 +15,14 @@ See the Mulan PSL v2 for more details. */
 #include "storage/db/db.h"
 
 #include <fcntl.h>
+#include <memory>
 #include <sys/stat.h>
 #include <vector>
 
 #include "common/lang/string.h"
 #include "common/log/log.h"
 #include "common/os/path.h"
+#include "common/rc.h"
 #include "storage/clog/clog.h"
 #include "storage/common/meta_util.h"
 #include "storage/table/table.h"
@@ -203,5 +205,24 @@ RC Db::init_dblwr_buffer()
     return RC::DBLWR_RECOVER_ERRO;
   }
 
+  return RC::SUCCESS;
+}
+
+RC Db::drop_table(const char *table_name)
+{
+  auto it = opened_tables_.find(table_name);
+  if (it == opened_tables_.end()) {
+    LOG_WARN("There is no table(%s) in db(%s)",table_name,this->name());
+    return RC::SCHEMA_TABLE_NOT_EXIST;
+  }
+  // 出问题就修改，改回裸指针
+  //出问题了，改回裸指针
+  auto table =it->second;
+  RC rc = table->destroy(path_.c_str());
+  if (rc != RC::SUCCESS){
+    LOG_WARN("Destoy table went wrong. file=%s, line=%d",__FILE__,__LINE__);
+    return rc;}
+  opened_tables_.erase(it);
+  delete table;
   return RC::SUCCESS;
 }

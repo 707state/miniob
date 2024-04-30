@@ -29,8 +29,8 @@ CalcSqlNode::~CalcSqlNode()
 ParsedSqlNode::ParsedSqlNode() : flag(SCF_ERROR) {}
 
 ParsedSqlNode::ParsedSqlNode(SqlCommandFlag _flag) : flag(_flag) {}
-
-void ParsedSqlResult::add_sql_node(std::unique_ptr<ParsedSqlNode> sql_node)
+//跟随修改了parse_defs.h中函数的入参
+void ParsedSqlResult::add_sql_node(std::unique_ptr<ParsedSqlNode>  sql_node)
 {
   sql_nodes_.emplace_back(std::move(sql_node));
 }

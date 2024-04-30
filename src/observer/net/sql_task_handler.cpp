@@ -17,6 +17,7 @@ See the Mulan PSL v2 for more details. */
 #include "event/session_event.h"
 #include "event/sql_event.h"
 #include "session/session.h"
+#include "sql/stmt/stmt.h"
 
 RC SqlTaskHandler::handle_event(Communicator *communicator)
 {
@@ -82,6 +83,8 @@ RC SqlTaskHandler::handle_sql(SQLStageEvent *sql_event)
     LOG_TRACE("failed to do execute. rc=%s", strrc(rc));
     return rc;
   }
-
+  if(sql_event->stmt()->type()==StmtType::DROP_TABLE){
+    return RC::SUCCESS;
+  }
   return rc;
 }
