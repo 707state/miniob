@@ -90,7 +90,7 @@ public:
   int32_t     table_id() const { return table_meta_.table_id(); }
   const char *name() const;
 
-  const TableMeta &table_meta() const;
+  TableMeta &table_meta() ;
 
   RC sync();
 
@@ -102,8 +102,8 @@ private:
   RC init_record_handler(const char *base_dir);
 
 public:
-  Index *find_index(const char *index_name) const;
-  Index *find_index_by_field(const char *field_name) const;
+  Index *find_index(const char *index_name);
+  Index *find_index_by_field(const char *field_name) ;
   RC destroy(const char * dir);
 private:
   std::string          base_dir_;

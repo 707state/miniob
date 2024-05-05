@@ -21,7 +21,7 @@ class AlterTableModifyStmt:public Stmt{
       relation_name_(relation_name),index_name_(index_name),attribute_name_(attribute_name){}
     virtual ~AlterTableModifyStmt()=default;
     StmtType type() const{
-      return StmtType::ALTER_TABLE_MODIFY;
+      return StmtType::ALTER_INDEX_MODIFY;
     }
     Table *table()const{
       return table_;
@@ -44,5 +44,5 @@ class AlterTableModifyStmt:public Stmt{
     // std::unique_ptr<DropIndexStmt> &drop_index(){
     //   return drop_index_;
     // }
-    static RC create(Db *db,const AlterModifySqlNode &modify_index,Stmt *&stmt);
+    static RC create(Db *db,const AlterIndexModifySqlNode &modify_index,Stmt *&stmt);
 };

@@ -264,7 +264,7 @@ RC Table::recover_insert_record(Record &record)
 
 const char *Table::name() const { return table_meta_.name(); }
 
-const TableMeta &Table::table_meta() const { return table_meta_; }
+TableMeta &Table::table_meta() { return table_meta_; }
 
 RC Table::make_record(int value_num, const Value *values, Record &record)
 {
@@ -339,33 +339,14 @@ RC Table::get_record_scanner(RecordFileScanner &scanner, Trx *trx, bool readonly
   }
   return rc;
 }
-RC Table::drop_index(Trx *trx,const char *index_name, const FieldMeta *field_meta)
+RC Table::drop_index(Trx *trx, const char *index_name, const FieldMeta *field_meta)
 {
   // 判断索引名是否为空
   if (common::is_blank(index_name)) {
     LOG_INFO("Invalid input arguments, table_name is %s, index_name is blank or attribute_name is blank",name());
     return RC::INVALID_ARGUMENT;
   }
-  // IndexMeta drop_index_meta;
-  // RC rc=drop_index_meta.init(index_name,*field_meta );
-  // if(){
-  //   LOG_WARN("Failed ad drop_index_meta. File(%s), line(%d)",__FILE__,__LINE__);
-  //   return RC::SCHEMA_INDEX_NOT_EXIST;
-  // }
-  // LOG_INFO("drop_table_meta at File:%s, line:%d, drop_table_meta:%s",__FILE__,__LINE__,drop_index_meta.name());
 
-  // if(rc!=RC::SUCCESS){
-  //   LOG_INFO("Failed to drop index (%s) on table (%s). error=%d:%s",
-  // index_name,name(),rc,strrc(rc));
-  //   return rc;
-  // }
-  // std::string tmp_file=table_meta_file(base_dir_.c_str(),name() )+".tmp";
-  // if(unlink(tmp_file.c_str())!=0){
-  //   LOG_WARN("Failed to remove index_file (%s) on table (%s). error=%d:%s",
-  // index_name,name(),rc,strrc(rc));
-  //   return rc;
-  // }
-  // return RC::SUCCESS;
   IndexMeta new_index_meta;
   RC        rc = new_index_meta.init(index_name, *field_meta);
   if (rc != RC::SUCCESS) {
@@ -381,22 +362,22 @@ RC Table::drop_index(Trx *trx,const char *index_name, const FieldMeta *field_met
     return rc;
   }
   RecordFileScanner scanner;
-  rc=get_record_scanner(scanner,trx ,true );
-  if(rc!=RC::SUCCESS){
+  rc = get_record_scanner(scanner, trx, true);
+  if (rc != RC::SUCCESS) {
     LOG_WARN("Failed to create scanner while drop index. table=$s,index_name=%s",
              __FILE__,index_name);
     return rc;
   }
   Record record;
-  while(scanner.has_next()){
-    rc=scanner.next(record);
-    if(rc!=RC::SUCCESS){
+  while (scanner.has_next()) {
+    rc = scanner.next(record);
+    if (rc != RC::SUCCESS) {
       LOG_WARN("failed to scan records while dropping index.table=%s, index=%s ",
     name(),index_name);
       return rc;
     }
-    rc=index->delete_entry(record.data(),&record.rid() );
-    if(rc!=RC::SUCCESS){
+    rc = index->delete_entry(record.data(), &record.rid());
+    if (rc != RC::SUCCESS) {
       LOG_WARN("failed to delete entry. file(%s), line(%d), table(%s)",
     __FILE__,__LINE__,name());
       return rc;
@@ -404,9 +385,9 @@ RC Table::drop_index(Trx *trx,const char *index_name, const FieldMeta *field_met
   }
   scanner.close_scan();
   LOG_INFO("droped all records from index:%s",index_name);
-  //indexes可能有问题
-  //如果有问题可以试试indexes_.push_back
-  
+  // indexes可能有问题
+  // 如果有问题可以试试indexes_.push_back
+
   TableMeta new_table_meta(table_meta_);
   rc = new_table_meta.remove_index(index_name);
   if (rc != RC::SUCCESS) {
@@ -562,7 +543,7 @@ RC Table::delete_entry_of_indexes(const char *record, const RID &rid, bool error
   return rc;
 }
 
-Index *Table::find_index(const char *index_name) const
+Index *Table::find_index(const char *index_name)
 {
   for (Index *index : indexes_) {
     if (0 == strcmp(index->index_meta().name(), index_name)) {
@@ -571,7 +552,7 @@ Index *Table::find_index(const char *index_name) const
   }
   return nullptr;
 }
-Index *Table::find_index_by_field(const char *field_name) const
+Index *Table::find_index_by_field(const char *field_name)
 {
   const TableMeta &table_meta = this->table_meta();
   const IndexMeta *index_meta = table_meta.find_index_by_field(field_name);

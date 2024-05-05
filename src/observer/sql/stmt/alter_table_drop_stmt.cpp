@@ -8,7 +8,7 @@
 #include "storage/index/index.h"
 #include "storage/table/table.h"
 using namespace common;
-RC AlterTableDropStmt::create(Db *db, const AlterDropSqlNode &alter_table_drop, Stmt *&stmt)
+RC AlterTableDropStmt::create(Db *db, const AlterIndexDropSqlNode &alter_table_drop, Stmt *&stmt)
 {
   stmt                   = nullptr;
   std::string table_name = alter_table_drop.relation_name;

@@ -26,7 +26,7 @@ class AlterTableAddStmt:public Stmt{
    relation_name_(relation_name),index_name_(index_name ),attribute_name_(attribute_name),table_(table),field_mete_(field_meta)
     {}    
       virtual ~AlterTableAddStmt()=default;
-      StmtType type()const{return StmtType::ALTER_TABLE_ADD;}
+      StmtType type()const{return StmtType::ALTER_INDEX_ADD;}
       const std::string &table_name()const{
         return relation_name_;
       }
@@ -45,5 +45,5 @@ class AlterTableAddStmt:public Stmt{
       const FieldMeta *field_meta()const{
         return field_mete_;
       }
-      static RC create(Db *db,const AlterAddSqlNode & alter_table_add,Stmt *&stmt );
+      static RC create(Db *db,const AlterIndexAddSqlNode & alter_table_add,Stmt *&stmt );
 };

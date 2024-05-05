@@ -11,7 +11,7 @@ RC AlterTableModifyExecutor::execute(SQLStageEvent *sql_event)
 {
   Stmt    *stmt    = sql_event->stmt();
   Session *session = sql_event->session_event()->session();
-  ASSERT(stmt->type()==StmtType::ALTER_TABLE_MODIFY,
+  ASSERT(stmt->type()==StmtType::ALTER_INDEX_MODIFY,
   "alter table modidy executor can not run this command: %d",
   static_cast<int>(stmt->type()) );
   AlterTableModifyStmt *alter_table_modify_stmt = static_cast<AlterTableModifyStmt *>(stmt);

@@ -11,7 +11,9 @@ See the Mulan PSL v2 for more details. */
 //
 // Created by Wangyunlai on 2022/5/22.
 //
-
+#include "sql/stmt/alter_column_add_stmt.h"
+#include "sql/stmt/alter_column_drop_stmt.h"
+#include "sql/stmt/alter_column_modify_stmt.h"
 #include "sql/stmt/stmt.h"
 #include "common/log/log.h"
 #include "sql/stmt/alter_table_add_stmt.h"
@@ -56,14 +58,14 @@ RC Stmt::create_stmt(Db *db, ParsedSqlNode &sql_node, Stmt *&stmt)
       return ExplainStmt::create(db, sql_node.explain, stmt);
     }
 
-    case SCF_ALTER_ADD: {
-      return AlterTableAddStmt::create(db, sql_node.alter_table_add, stmt);
+    case SCF_ALTER_INDEX_ADD: {
+      return AlterTableAddStmt::create(db, sql_node.alter_index_table_add, stmt);
     }
-    case SCF_ALTER_DROP: {
-      return AlterTableDropStmt::create(db, sql_node.alter_table_drop, stmt);
+    case SCF_ALTER_INDEX_DROP: {
+      return AlterTableDropStmt::create(db, sql_node.alter_index_table_drop, stmt);
     }
-    case SCF_ALTER_MODIFY: {
-      return AlterTableModifyStmt::create(db, sql_node.alter_table_modify, stmt);
+    case SCF_ALTER_INDEX_MODIFY: {
+      return AlterTableModifyStmt::create(db, sql_node.alter_index_table_modify, stmt);
     }
     case SCF_CREATE_INDEX: {
       return CreateIndexStmt::create(db, sql_node.create_index, stmt);
@@ -80,7 +82,15 @@ RC Stmt::create_stmt(Db *db, ParsedSqlNode &sql_node, Stmt *&stmt)
     case SCF_DESC_TABLE: {
       return DescTableStmt::create(db, sql_node.desc_table, stmt);
     }
-
+    case SCF_ALTER_COLUMN_ADD: {
+      return AlterColumnAddStmt::create(db, sql_node.alter_column_table_add, stmt);
+    }
+    case SCF_ALTER_COLUMN_DROP: {
+      return AlterColumnDropStmt::create(db, sql_node.alter_column_table_drop, stmt);
+    }
+    case SCF_ALTER_COLUMN_MODIFY: {
+      return AlterColumnModifyStmt::create(db, sql_node.alter_column_table_modify, stmt);
+    }
     case SCF_HELP: {
       return HelpStmt::create(stmt);
     }

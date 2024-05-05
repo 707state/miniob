@@ -16,6 +16,7 @@ See the Mulan PSL v2 for more details. */
 #include "common/lang/string.h"
 #include "common/log/log.h"
 #include "sql/parser/parse_defs.h"
+#include "sql/parser/value.h"
 
 #include "json/json.h"
 
@@ -57,8 +58,11 @@ RC FieldMeta::init(const char *name, AttrType attr_type, int attr_offset, int at
 }
 
 const char *FieldMeta::name() const { return name_.c_str(); }
-
-AttrType FieldMeta::type() const { return attr_type_; }
+void        FieldMeta::set_name(const char *name) { this->name_ = std::string(name); }
+void FieldMeta::set_attr_type(AttrType new_type){
+  this->attr_type_=new_type;
+}
+AttrType    FieldMeta::type() const { return attr_type_; }
 
 int FieldMeta::offset() const { return attr_offset_; }
 

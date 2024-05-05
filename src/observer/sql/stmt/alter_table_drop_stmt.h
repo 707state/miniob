@@ -22,7 +22,7 @@ class AlterTableDropStmt:public Stmt{
     index_name_(index_name),table_(table),field_meta_(field_meta){}
     virtual~ AlterTableDropStmt()=default;
     StmtType type()const {
-      return StmtType::ALTER_TABLE_DROP;
+      return StmtType::ALTER_INDEX_DROP;
     }
     const std::string& table_name()const{
       return relation_name_;
@@ -39,5 +39,5 @@ class AlterTableDropStmt:public Stmt{
     // auto drop_index(){
     //   return drop_index_;
     // }
-    static RC create(Db *db,const AlterDropSqlNode &alter_table_drop,Stmt *&stmt);
+    static RC create(Db *db,const AlterIndexDropSqlNode &alter_table_drop,Stmt *&stmt);
 };

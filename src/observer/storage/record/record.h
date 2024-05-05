@@ -122,6 +122,7 @@ public:
     }
 
     this->~Record();
+    // placement new.
     new (this) Record(other);
     return *this;
   }

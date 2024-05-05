@@ -14,6 +14,7 @@ See the Mulan PSL v2 for more details. */
 
 #pragma once
 
+#include <span>
 #include <vector>
 #include <string>
 #include <unordered_map>
@@ -47,7 +48,7 @@ public:
   RC init(const char *name, const char *dbpath);
 
   RC create_table(const char *table_name, int attribute_count, const AttrInfoSqlNode *attributes);
-
+  // RC create_table(const char* table_name,std::span<AttrInfoSqlNode> attributez);
   Table *find_table(const char *table_name) const;
   Table *find_table(int32_t table_id) const;
 

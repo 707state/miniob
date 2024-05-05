@@ -19,6 +19,7 @@ See the Mulan PSL v2 for more details. */
 
 #include "common/lang/serializable.h"
 #include "common/rc.h"
+#include "sql/parser/parse_defs.h"
 #include "storage/field/field_meta.h"
 #include "storage/index/index_meta.h"
 
@@ -37,7 +38,7 @@ public:
   void swap(TableMeta &other) noexcept;
 
   RC init(int32_t table_id, const char *name, int field_num, const AttrInfoSqlNode attributes[]);
-
+  std::vector<AttrInfoSqlNode> attr_infos();
   RC add_index(const IndexMeta &index);
   RC remove_index(const char *index_name);
 public:
@@ -66,12 +67,17 @@ public:
   int  get_serial_size() const override;
   void to_string(std::string &output) const override;
   void desc(std::ostream &os) const;
-
+  void set_field( std::vector<FieldMeta>&field);
+  void append_field(FieldMeta field_meta);
+  void append_fields(std::vector<FieldMeta>& fields);
+  void set_attr_info(const std::vector<AttrInfoSqlNode>& attr_infos);
+  void append_attr_info(std::vector<AttrInfoSqlNode>& attr_infos);
+  RC remove_column(const std::string& table_name);
 protected:
   int32_t                table_id_ = -1;
   std::string            name_;
   std::vector<FieldMeta> fields_;  // 包含sys_fields
   std::vector<IndexMeta> indexes_;
-
+  std::vector<AttrInfoSqlNode> attr_infos_;
   int record_size_ = 0;
 };

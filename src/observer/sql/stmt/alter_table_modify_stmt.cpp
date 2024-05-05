@@ -7,7 +7,7 @@
 #include "storage/field/field_meta.h"
 #include "storage/index/index.h"
 using namespace common;
-RC AlterTableModifyStmt::create(Db *db, const AlterModifySqlNode &alter_table_modify, Stmt *&stmt)
+RC AlterTableModifyStmt::create(Db *db, const AlterIndexModifySqlNode &alter_table_modify, Stmt *&stmt)
 {
   stmt                       = nullptr;
   std::string table_name     = alter_table_modify.relation_name;

@@ -13,7 +13,7 @@ RC AlterTableDropExecuter::execute(SQLStageEvent *sql_event)
 {
   Stmt    *stmt    = sql_event->stmt();
   Session *session = sql_event->session_event()->session();
-  ASSERT(stmt->type()==StmtType::ALTER_TABLE_DROP,
+  ASSERT(stmt->type()==StmtType::ALTER_INDEX_DROP,
   "create index executor can not run this command: %d",static_cast<int>(stmt->type()) );
   AlterTableDropStmt *alter_table_drop_stmt = static_cast<AlterTableDropStmt *>(stmt);
   Trx *trx=session->current_trx(); 

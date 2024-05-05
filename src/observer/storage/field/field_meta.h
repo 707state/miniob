@@ -37,6 +37,8 @@ public:
   RC init(const char *name, AttrType attr_type, int attr_offset, int attr_len, bool visible);
 
 public:
+  void set_name(const char* name);
+  void set_attr_type(AttrType new_type);
   const char *name() const;
   AttrType    type() const;
   int         offset() const;

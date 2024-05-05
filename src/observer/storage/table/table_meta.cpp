@@ -17,6 +17,8 @@ See the Mulan PSL v2 for more details. */
 
 #include "common/log/log.h"
 #include "storage/table/table_meta.h"
+#include "sql/parser/parse_defs.h"
+#include "storage/field/field_meta.h"
 #include "storage/index/index_meta.h"
 #include "storage/trx/trx.h"
 #include "json/json.h"
@@ -43,14 +45,19 @@ void TableMeta::swap(TableMeta &other) noexcept
   indexes_.swap(other.indexes_);
   std::swap(record_size_, other.record_size_);
 }
-
+std::vector<AttrInfoSqlNode> TableMeta::attr_infos() { return attr_infos_; }
 RC TableMeta::init(int32_t table_id, const char *name, int field_num, const AttrInfoSqlNode attributes[])
 {
   if (common::is_blank(name)) {
     LOG_ERROR("Name cannot be empty");
     return RC::INVALID_ARGUMENT;
   }
-
+  if (attr_infos_.size()) {
+    attr_infos_.clear();
+  }
+  for (int i = 0; i < field_num; i++) {
+    attr_infos_.push_back(attributes[i]);
+  }
   if (field_num <= 0 || nullptr == attributes) {
     LOG_ERROR("Invalid argument. name=%s, field_num=%d, attributes=%p", name, field_num, attributes);
     return RC::INVALID_ARGUMENT;
@@ -322,4 +329,53 @@ void TableMeta::desc(std::ostream &os) const
     os << std::endl;
   }
   os << ')' << std::endl;
+}
+void TableMeta::set_field(std::vector<FieldMeta> &field) { this->fields_.swap(field); }
+void TableMeta::append_field(FieldMeta field) { this->fields_.push_back(field); }
+void TableMeta::append_fields(std::vector<FieldMeta> &field_meta)
+{
+  this->fields_.insert(std::end(this->fields_), std::begin(field_meta), std::end(field_meta));
+}
+void TableMeta::set_attr_info(const std::vector<AttrInfoSqlNode> &attr_infos) { this->attr_infos_ = attr_infos; }
+void TableMeta::append_attr_info(std::vector<AttrInfoSqlNode> &attr_infos)
+{
+  this->attr_infos_.insert(std::end(this->attr_infos_), std::begin(attr_infos), std::end(attr_infos));
+}
+RC TableMeta::remove_column(const std::string &name)
+{
+  int attr_size  = attr_infos_.size();
+  int field_size = fields_.size();
+  int i          = 0;
+  for (i = 0; i < attr_size; i++) {
+    if (attr_infos_[i].name == name) {
+      break;
+    }
+  }
+  if (i == attr_size - 1 && attr_infos_[i].name != name) {
+    LOG_WARN("No column(%s) found",name.c_str());
+    return RC::GENERIC_ERROR;
+  }
+  for (; i < attr_size - 1; i++) {
+    attr_infos_[i] = attr_infos_[i + 1];
+  }
+  attr_infos_.pop_back();
+  for (i = 0; i < field_size; i++) {
+    if (fields_[i].name() == name) {
+      break;
+    }
+  }
+  if (i == field_size - 1 && fields_[i].name() != name) {
+    LOG_WARN("No column(%s) found",name.c_str());
+    return RC::GENERIC_ERROR;
+  }
+
+  for (; i < field_size - 1; i++) {
+    fields_[i] = fields_[i + 1];
+  }
+  if (fields_.size()) {
+    fields_.pop_back();
+  } else {
+    return RC::SCHEMA_FIELD_MISSING;
+  }
+  return RC::SUCCESS;
 }

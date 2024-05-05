@@ -65,6 +65,7 @@ ArithmeticExpr *create_arithmetic_expression(ArithmeticExpr::Type type,
         INDEX
         CALC
         SELECT
+	COLUMN
         DESC
         SHOW
         SYNC
@@ -147,7 +148,7 @@ ArithmeticExpr *create_arithmetic_expression(ArithmeticExpr::Type type,
 %type <expression_list>     expression_list
 %type <sql_node>            calc_stmt
 //%type <sql_node>            alter_table_add_stmt
-//%type <sql_node>            alter_table_drop_stmt
+//%type <sql_node>            alter_index_table_drop_stmt
 //add two sql_nodes
 %type <sql_node>            alter_stmt
 %type <sql_node>            action
@@ -194,7 +195,7 @@ command_wrapper:
   | update_stmt
   | delete_stmt
   // | alter_table_add_stmt
-  // | alter_table_drop_stmt
+  // | alter_index_table_drop_stmt
   // | alter_table_modify_stmt
   | alter_stmt
   | create_table_stmt
@@ -218,25 +219,43 @@ alter_stmt:
     ALTER TABLE ID action{
 	ActionSqlNode *action_sql_node=&($4->action);
 	switch(action_sql_node->type){
-	case 1:{
-	$$=new ParsedSqlNode(SCF_ALTER_ADD);
-	AlterAddSqlNode &alter_table_add=$$->alter_table_add;
-	alter_table_add.relation_name=$3;
-	alter_table_add.index_name=action_sql_node->index_name;
-	alter_table_add.attribute_name=action_sql_node->attribute_name;
+	case ActionFlag::IndexAdd:{
+	$$=new ParsedSqlNode(SCF_ALTER_INDEX_ADD);
+	AlterIndexAddSqlNode &alter_index_table_add=$$->alter_index_table_add;
+	alter_index_table_add.relation_name=$3;
+	alter_index_table_add.index_name=action_sql_node->index_name;
+	alter_index_table_add.attribute_name=action_sql_node->attribute_name;
 	}break;
-	case 2:{
-	$$=new ParsedSqlNode(SCF_ALTER_DROP);
-	AlterDropSqlNode &alter_table_drop=$$->alter_table_drop;
-	alter_table_drop.relation_name=$3;
-	alter_table_drop.index_name=action_sql_node->index_name;
+	case ActionFlag::IndexDrop:{
+	$$=new ParsedSqlNode(SCF_ALTER_INDEX_DROP);
+	AlterIndexDropSqlNode &alter_index_table_drop=$$->alter_index_table_drop;
+	alter_index_table_drop.relation_name=$3;
+	alter_index_table_drop.index_name=action_sql_node->index_name;
 	}break;
-	case 3:{
-	$$=new ParsedSqlNode(SCF_ALTER_MODIFY);
-	AlterModifySqlNode &alter_table_modify=$$->alter_table_modify;
-	alter_table_modify.relation_name=$3;
-	alter_table_modify.index_name=action_sql_node->index_name;
-	alter_table_modify.attribute_name=action_sql_node->attribute_name;
+	case ActionFlag::IndexModify:{
+	$$=new ParsedSqlNode(SCF_ALTER_INDEX_MODIFY);
+	AlterIndexModifySqlNode &alter_index_table_modify=$$->alter_index_table_modify;
+	alter_index_table_modify.relation_name=$3;
+	alter_index_table_modify.index_name=action_sql_node->index_name;
+	alter_index_table_modify.attribute_name=action_sql_node->attribute_name;
+	}break;
+	case ActionFlag::ColumnAdd:{
+	$$=new ParsedSqlNode(SCF_ALTER_COLUMN_ADD);
+	AlterColumnAddSqlNode &alter_column_table_add=$$->alter_column_table_add;
+	alter_column_table_add.relation_name=$3;
+	alter_column_table_add.attr_infos=action_sql_node->attr_infos;
+	}break;
+	case ActionFlag::ColumnDrop:{
+	$$=new ParsedSqlNode(SCF_ALTER_COLUMN_DROP);
+	AlterColumnDropSqlNode &alter_column_table_drop=$$->alter_column_table_drop;
+	alter_column_table_drop.relation_name=$3;
+	alter_column_table_drop.attribute_name=action_sql_node->attribute_name;
+	}break;
+	case ActionFlag::ColumnModify:{
+	$$=new ParsedSqlNode(SCF_ALTER_COLUMN_MODIFY);
+	AlterColumnModifySqlNode &alter_column_table_modify=$$->alter_column_table_modify;
+	alter_column_table_modify.relation_name=$3;
+	alter_column_table_modify.attr_infos=action_sql_node->attr_infos;
 	}break;
 	default:{
 	$$=new ParsedSqlNode(SCF_ERROR);
@@ -255,7 +274,7 @@ action:
     ActionSqlNode &action=$$->action;
     action.index_name=$3;
     action.attribute_name=$5;
-    action.type=1;
+    action.type=ActionFlag::IndexAdd;
     free($3);
     free($5);
 }|
@@ -263,7 +282,7 @@ action:
     $$=new ParsedSqlNode(SCF_ACTION);
     ActionSqlNode &action=$$->action;
     action.index_name=$3;
-    action.type=2;
+    action.type=ActionFlag::IndexDrop;
     free($3);
     //printf("Drop index ID(%s)\n",$3);
 }|
@@ -272,11 +291,44 @@ action:
     ActionSqlNode &action=$$->action;
     action.attribute_name=$5;
     action.index_name=$3;
-    action.type=3;
+    action.type=ActionFlag::IndexModify;
     free($3);
     free($5);
     //printf("Modify index ID(%s) ATTRIBUTE(%s)\n",$3,$4);
-    };
+}|
+    ADD COLUMN LBRACE attr_def attr_def_list RBRACE{
+    $$=new ParsedSqlNode(SCF_ACTION);
+    ActionSqlNode &action=$$->action;
+    std::vector<AttrInfoSqlNode>* src_attrs=$5;
+    if(src_attrs!=nullptr){
+    	action.attr_infos.swap(*src_attrs);
+	delete src_attrs;
+    }
+    action.attr_infos.emplace_back(*$4);
+    action.type=ActionFlag::ColumnAdd;
+    std::reverse(action.attr_infos.begin(),action.attr_infos.end());
+    delete $4; 
+}|
+    DROP COLUMN ID{
+    $$=new ParsedSqlNode(SCF_ACTION);
+    ActionSqlNode &action=$$->action;
+    action.attribute_name=$3;
+    action.type=ActionFlag::ColumnDrop;
+    free($3);
+}|
+    MODIFY COLUMN LBRACE attr_def attr_def_list RBRACE{
+    $$=new ParsedSqlNode(SCF_ACTION);
+    ActionSqlNode &action=$$->action;
+    std::vector<AttrInfoSqlNode>* src_attrs=$5;
+    if(src_attrs!=nullptr){
+    	action.attr_infos.swap(*src_attrs);
+	delete src_attrs;
+    }
+    action.attr_infos.emplace_back(*$4);
+    action.type=ActionFlag::ColumnModify;
+    std::reverse(action.attr_infos.begin(),action.attr_infos.end());
+    delete $4; 
+};
 
 exit_stmt:      
     EXIT {

@@ -62,7 +62,7 @@ extern double atof();
 WHITE_SAPCE      [\ \t\b\f]
 DIGIT            [0-9]+
 
-ID               [A-Za-z_]+[A-Za-z0-9_]*
+ID              [A-Za-z_]+[A-Za-z0-9_]*
 DOT              \.
 QUOTE            [\'\"]
 %x STR
@@ -92,6 +92,7 @@ CREATE                                  RETURN_TOKEN(CREATE);
 DROP                                    RETURN_TOKEN(DROP);
 TABLE                                   RETURN_TOKEN(TABLE);
 TABLES                                  RETURN_TOKEN(TABLES);
+COLUMN                                  RETURN_TOKEN(COLUMN);
 INDEX                                   RETURN_TOKEN(INDEX);
 ON                                      RETURN_TOKEN(ON);
 SHOW                                    RETURN_TOKEN(SHOW);

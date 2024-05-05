@@ -227,18 +227,36 @@ struct SetVariableSqlNode
  *@brief alter_table_add_stmt修改表的语法树
  * @ ingroup SQLParser
  */
-struct AlterAddSqlNode
+struct AlterIndexAddSqlNode
 {
   std::string relation_name;
   std::string index_name;
   std::string attribute_name;
+};
+/*
+ *@ brief alter column add
+ * */
+struct AlterColumnAddSqlNode
+{
+  std::string                  relation_name;
+  std::vector<AttrInfoSqlNode> attr_infos;
+};
+struct AlterColumnDropSqlNode
+{
+  std::string relation_name;
+  std::string attribute_name;
+};
+struct AlterColumnModifySqlNode
+{
+  std::string                  relation_name;
+  std::vector<AttrInfoSqlNode> attr_infos;
 };
 /**
  *@brief alter_table_drop_stmt
  * @ingroup SQLParser
  * @details 删除一个index
  */
-struct AlterDropSqlNode
+struct AlterIndexDropSqlNode
 {
   std::string relation_name;
   std::string index_name;
@@ -248,7 +266,7 @@ struct AlterDropSqlNode
  * @ingroup SQLParser
  * @details 修改一个表的属性
  */
-struct AlterModifySqlNode
+struct AlterIndexModifySqlNode
 {
   std::string relation_name;
   std::string index_name;
@@ -280,11 +298,22 @@ struct ErrorSqlNode
   int         line;
   int         column;
 };
+enum ActionFlag
+{
+  IndexAdd,
+  IndexDrop,
+  IndexModify,
+  ColumnAdd,
+  ColumnDrop,
+  ColumnModify
+};
 struct ActionSqlNode
 {
-  std::string index_name;
-  std::string attribute_name;
-  int         type;
+  std::string                  index_name;
+  std::string                  attribute_name;
+  std::vector<AttrInfoSqlNode> attr_infos;
+
+  enum ActionFlag type;
 };
 
 /*
@@ -299,9 +328,12 @@ enum SqlCommandFlag
   SCF_INSERT,
   SCF_UPDATE,
   SCF_DELETE,
-  SCF_ALTER_ADD,
-  SCF_ALTER_DROP,
-  SCF_ALTER_MODIFY,
+  SCF_ALTER_INDEX_ADD,
+  SCF_ALTER_INDEX_DROP,
+  SCF_ALTER_INDEX_MODIFY,
+  SCF_ALTER_COLUMN_ADD,
+  SCF_ALTER_COLUMN_DROP,
+  SCF_ALTER_COLUMN_MODIFY,
   SCF_ACTION,
   SCF_CREATE_TABLE,
   SCF_DROP_TABLE,
@@ -335,18 +367,21 @@ public:
   DeleteSqlNode       deletion;
   UpdateSqlNode       update;
   // add action
-  ActionSqlNode      action;
-  AlterAddSqlNode    alter_table_add;
-  AlterDropSqlNode   alter_table_drop;
-  AlterModifySqlNode alter_table_modify;
-  CreateTableSqlNode create_table;
-  DropTableSqlNode   drop_table;
-  CreateIndexSqlNode create_index;
-  DropIndexSqlNode   drop_index;
-  DescTableSqlNode   desc_table;
-  LoadDataSqlNode    load_data;
-  ExplainSqlNode     explain;
-  SetVariableSqlNode set_variable;
+  ActionSqlNode            action;
+  AlterIndexAddSqlNode     alter_index_table_add;
+  AlterIndexDropSqlNode    alter_index_table_drop;
+  AlterIndexModifySqlNode  alter_index_table_modify;
+  AlterColumnDropSqlNode   alter_column_table_drop;
+  AlterColumnAddSqlNode    alter_column_table_add;
+  AlterColumnModifySqlNode alter_column_table_modify;
+  CreateTableSqlNode       create_table;
+  DropTableSqlNode         drop_table;
+  CreateIndexSqlNode       create_index;
+  DropIndexSqlNode         drop_index;
+  DescTableSqlNode         desc_table;
+  LoadDataSqlNode          load_data;
+  ExplainSqlNode           explain;
+  SetVariableSqlNode       set_variable;
 
 public:
   ParsedSqlNode();
